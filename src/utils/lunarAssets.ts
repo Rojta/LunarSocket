@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 async function getLunarMetadata(): Promise<any> {
-  return axios
+  return await axios
     .post('https://api.lunarclientprod.com/launcher/launch', {
       hwid: 'not supplied',
       os: 'win32',
@@ -33,8 +33,9 @@ async function getAssetsIndex(): Promise<AssetsIndex> {
 async function fetchCosmeticsIndex(): Promise<Cosmetic[]> {
   const assetsIndex = await getAssetsIndex();
   const entry = assetsIndex.files.find(
-    (f) => f.path == 'assets/lunar/cosmetics/index'
+    (f) => f.path === 'assets/lunar/cosmetics/index'
   );
+
   const url = assetsIndex.baseUrl + entry.sha1;
 
   return axios
@@ -48,7 +49,7 @@ async function fetchCosmeticsIndex(): Promise<Cosmetic[]> {
           resource: parts[8],
           name: parts[3],
           type: parts[4],
-          animated: !!parts[5],
+          animated: Boolean(parts[5]),
           category: parts[6],
           indexType: parts[7],
         };
