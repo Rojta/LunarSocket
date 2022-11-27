@@ -7,6 +7,7 @@ import events from './utils/events';
 import logger from './utils/logger';
 import ServerString from './utils/ServerString';
 import startStats from './utils/stats';
+import { getCosmeticsIndex } from './utils/lunarAssets';
 
 console.log(`  _                               _____            _        _   
  | |                             / ____|          | |      | |  
@@ -90,7 +91,7 @@ server.on('connection', async (socket, request) => {
   if (connectedPlayers.find((p) => p.uuid === handshake.playerId))
     return socket.close(3001, 'Already connected');
 
-  const player = new Player(socket, handshake);
+  const player = new Player(socket, handshake, await getCosmeticsIndex());
 
   connectedPlayers.push(player);
 });
