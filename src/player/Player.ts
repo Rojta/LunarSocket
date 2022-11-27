@@ -51,7 +51,11 @@ export default class Player {
   private outgoingPacketHandler: OutgoingPacketHandler;
   private incomingPacketHandler: IncomingPacketHandler;
 
-  public constructor(socket: WebSocket, handshake: Handshake, cosmeticsIndex: Cosmetic[]) {
+  public constructor(
+    socket: WebSocket,
+    handshake: Handshake,
+    cosmeticsIndex: Cosmetic[]
+  ) {
     this.version = handshake.version;
     this.username = handshake.username;
     this.uuid = handshake.playerId;
@@ -85,7 +89,9 @@ export default class Player {
     for (let i = 0; i < 250; i++) this.emotes.owned.fake.push(i);
 
     // Yes, we're giving cosmetics out of nowhere again
-    cosmeticsIndex.forEach(cosmetic => this.cosmetics.fake.push({ id: cosmetic.id, equipped: false }));
+    cosmeticsIndex.forEach((cosmetic) =>
+      this.cosmetics.fake.push({ id: cosmetic.id, equipped: false })
+    );
 
     const handleIncomingMessage = async (data: Buffer) => {
       // Trying to handle packet
