@@ -33,6 +33,7 @@ $ cd LunarSocket # Go to LunarSocket folder
 $ npm install # Install dependencies
 $ npm run init # Execute the init script
 ```
+
 or (Linux only)
 
 ```bash
