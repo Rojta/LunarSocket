@@ -6,58 +6,66 @@ import logger from '../utils/logger';
 import Database from './Database';
 
 export default class FileStorage extends Database {
-  private filePath: string;
-  private file: { [key: string]: DatabasePlayer | CustomCosmetic[] };
+	private filePath: string;
+	private file: { [key: string]: DatabasePlayer | CustomCosmetic[] };
 
-  public constructor() {
-    super();
+	public constructor() {
+		super();
 
-    this.init().catch((reason) => {
-      logger.error('An error occured while initializing FileStorage\n', reason);
-      logger.error("Can't proceed without a working database, exiting...");
-      process.exit(1);
-    });
-  }
+		this.init().catch(reason => {
+			logger.error('An error occured while initializing FileStorage\n', reason);
+			logger.error("Can't proceed without a working database, exiting...");
+			process.exit(1);
+		});
+	}
 
-  private async init(): Promise<void> {
-    this.filePath = (await getConfig()).database.config.filePath;
-    this.file = {
-      customCosmetics: [],
-    };
+	private async init(): Promise<void> {
+		this.filePath = (await getConfig()).database.config.filePath;
+		this.file = {
+			customCosmetics: []
+		};
 
-    if (!(await stat(this.filePath).catch(() => undefined))) {
-      await this.writeFile();
-    }
+		if (!(await stat(this.filePath).catch(() => undefined))) {
+			await this.writeFile();
+		}
 
-    const file = await readFile(this.filePath, 'utf8');
-    this.file = JSON.parse(file);
-  }
+		const file = await readFile(this.filePath, 'utf8');
+		this.file = JSON.parse(file);
+	}
 
-  private async writeFile(): Promise<void> {
-    await writeFile(this.filePath, JSON.stringify(this.file));
-  }
+	private async writeFile(): Promise<void> {
+		await writeFile(this.filePath, JSON.stringify(this.file));
+	}
 
-  public async setPlayer(player: Player): Promise<void> {
-    this.setPlayerRaw(player.uuid, player.getDatabasePlayer());
-  }
+	public async setPlayer(player: Player): Promise<void> {
+		await this.setPlayerRaw(player.uuid, player.getDatabasePlayer());
+	}
 
-  public async setPlayerRaw(
-    uuid: string,
-    player: DatabasePlayer
-  ): Promise<void> {
-    this.file[uuid] = player;
-    await this.writeFile();
-  }
+	public async setPlayerRaw(uuid: string, player: DatabasePlayer): Promise<void> {
+		this.file[uuid] = player;
+		await this.writeFile();
+	}
 
-  public async getPlayer(uuid: string): Promise<DatabasePlayer> {
-    return this.file[uuid] as DatabasePlayer;
-  }
+	public getPlayer(uuid: string): DatabasePlayer {
+		return this.file[uuid] as DatabasePlayer;
+	}
 
-  public async getPlayerCount(): Promise<number> {
-    return Object.keys(this.file).length;
-  }
+	public getPlayerCount(): number {
+		return Object.keys(this.file).length;
+	}
 
-  public async getCustomCosmetics(): Promise<CustomCosmetic[]> {
-    return this.file.customCosmetics as CustomCosmetic[];
-  }
+	public getCustomCosmetics(): CustomCosmetic[] {
+		return this.file.customCosmetics as CustomCosmetic[];
+	}
+
+	public getRoleDistribution(): { [role: string]: number } {
+		const roles = {};
+		for (const role of Object.values(this.file).map(user => user.role)) {
+			if (role !== 'default') {
+				roles[role] ??= 0;
+				roles[role]++;
+			}
+		}
+		return roles;
+	}
 }
