@@ -1,13 +1,13 @@
-import { Server as WebSocketServer } from "ws";
-import createServer from "./api";
-import Packet from "./packets/Packet";
-import Player, { Handshake } from "./player/Player";
-import getConfig, { initConfig } from "./utils/config";
-import events from "./utils/events";
-import logger from "./utils/logger";
-import { getCosmeticsIndex } from "./utils/lunar";
-import ServerString from "./utils/ServerString";
-import startStats from "./utils/stats";
+import { Server as WebSocketServer } from 'ws';
+import createServer from './api';
+import Packet from './packets/Packet';
+import Player, { Handshake } from './player/Player';
+import getConfig, { initConfig } from './utils/config';
+import events from './utils/events';
+import logger from './utils/logger';
+import { getCosmeticsIndex } from './utils/lunar';
+import ServerString from './utils/ServerString';
+import startStats from './utils/stats';
 
 console.log(`  _                               _____            _        _   
  | |                             / ____|          | |      | |  
@@ -18,71 +18,106 @@ console.log(`  _                               _____            _        _
 
 let config = initConfig();
 export const httpServer = createServer();
-export const isProduction = process.env.LUNARSOCKET_DEBUG !== "true";
+export const isProduction = process.env.LUNARSOCKET_DEBUG !== 'true';
 
 const server = new WebSocketServer({
-	server: httpServer,
-	path: config.server.websocketPath
+  server: httpServer,
+  path: config.server.websocketPath,
 });
 
-server.on("error", error => logger.error(error));
+server.on('error', (error) => logger.error(error));
 
-server.on("listening", () => {
-	logger.log(`Server listening on port ${config.server.port}`);
-	const date = new Date();
-	events.push({
-		type: "start",
-		value: `${date.getHours()}:${date.getMinutes()} (${date.getMonth() + 1}/${date.getDate()})`
-	});
+server.on('listening', () => {
+  logger.log(`Server listening on port ${config.server.port}`);
+  const date = new Date();
+  events.push({
+    type: 'start',
+    value: `${date.getHours()}:${date.getMinutes()} (${
+      date.getMonth() + 1
+    }/${date.getDate()})`,
+  });
 });
 
-server.on("connection", async (socket, request) => {
-	const getHeader = (name: string) => request.headers[name.toLowerCase()];
+server.on('connection', async (socket, request) => {
+  const getHeader = (name: string) => request.headers[name.toLowerCase()];
 
-	const handshake = {} as Handshake;
+  const handshake = {} as Handshake;
 
-	for (const header of ["accountType", "arch", "Authorization", "branch", "clothCloak", "gitCommit", "hatHeightOffset", "hwid", "launcherVersion", "lunarPlusColor", "os", "playerId", "protocolVersion", "server", "showHatsOverHelmet", "showHatsOverSkinLayer", "username", "version", "flipShoulderPet", "ichorModules", "showOverBoots", "showOverChestplate", "showOverLeggings"]) {
-		handshake[header] = getHeader(header) ?? "";
-	}
+  for (const header of [
+    'accountType',
+    'arch',
+    'Authorization',
+    'branch',
+    'clothCloak',
+    'gitCommit',
+    'hatHeightOffset',
+    'hwid',
+    'launcherVersion',
+    'lunarPlusColor',
+    'os',
+    'playerId',
+    'protocolVersion',
+    'server',
+    'showHatsOverHelmet',
+    'showHatsOverSkinLayer',
+    'username',
+    'version',
+    'flipShoulderPet',
+    'ichorModules',
+    'showOverBoots',
+    'showOverChestplate',
+    'showOverLeggings',
+  ]) {
+    handshake[header] = getHeader(header) ?? '';
+  }
 
-	handshake.Host = "assetserver.lunarclientprod.com";
+  handshake.Host = 'assetserver.lunarclientprod.com';
 
-	// Ignoring players with older/newer protocol versions
-	if (handshake.protocolVersion !== "8") return socket.close(1002, "Incompatible protocol version, requires 8");
+  // Ignoring players with older/newer protocol versions
+  if (handshake.protocolVersion !== '8')
+    return socket.close(1002, 'Incompatible protocol version, requires 8');
 
-	config = await getConfig();
+  config = await getConfig();
 
-	if (config.whitelist.enabled) if (!config.whitelist.list.includes(handshake.playerId)) return socket.close(3000, "You are not whitelisted");
-	if (config.blacklist.list.includes(handshake.playerId)) return socket.close(3000, "You have been blacklisted.");
+  if (config.whitelist.enabled)
+    if (!config.whitelist.list.includes(handshake.playerId))
+      return socket.close(3000, 'You are not whitelisted');
+  if (config.blacklist.list.includes(handshake.playerId))
+    return socket.close(3000, 'You have been blacklisted.');
 
-	// Closing the connection if the player is already connected
-	if (connectedPlayers.find(p => p.uuid === handshake.playerId)) return socket.close(3001, "Already connected");
+  // Closing the connection if the player is already connected
+  if (connectedPlayers.find((p) => p.uuid === handshake.playerId))
+    return socket.close(3001, 'Already connected');
 
-	const player = new Player(socket, handshake, await getCosmeticsIndex());
+  const player = new Player(socket, handshake, await getCosmeticsIndex());
 
-	return connectedPlayers.push(player);
+  return connectedPlayers.push(player);
 });
 
-export function broadcast(data: Buffer | Packet, broadcastServer?: string, broadcastPlayer?: Player): void {
-	const playerServer = new ServerString(broadcastServer);
+export function broadcast(
+  data: Buffer | Packet,
+  broadcastServer?: string,
+  broadcastPlayer?: Player
+): void {
+  const playerServer = new ServerString(broadcastServer);
 
-	connectedPlayers.forEach(p => {
-		if (broadcastPlayer && p.uuid === broadcastPlayer.uuid) return;
-		if (broadcastServer) {
-			if (ServerString.match(playerServer, p.server)) p.writeToClient(data);
-		} else p.writeToClient(data);
-	});
+  connectedPlayers.forEach((p) => {
+    if (broadcastPlayer && p.uuid === broadcastPlayer.uuid) return;
+    if (broadcastServer) {
+      if (ServerString.match(playerServer, p.server)) p.writeToClient(data);
+    } else p.writeToClient(data);
+  });
 }
 
 export function removePlayer(uuid: string): void {
-	connectedPlayers.splice(
-		connectedPlayers.findIndex(p => p.uuid === uuid),
-		1
-	);
+  connectedPlayers.splice(
+    connectedPlayers.findIndex((p) => p.uuid === uuid),
+    1
+  );
 }
 
 export const connectedPlayers: Player[] = [];
 
 startStats();
 
-process.on("uncaughtException", error => logger.error(error));
+process.on('uncaughtException', (error) => logger.error(error));

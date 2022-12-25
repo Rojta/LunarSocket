@@ -6,26 +6,28 @@ import Mongo from './Mongo';
 import Redis from './Redis';
 
 class DatabaseManager {
-	public static constructors = {
-		instanceStorage: InstanceStorage,
-		mongo: Mongo,
-		fileStorage: FileStorage,
-		redis: Redis
-	} as const;
-	public static instance = new DatabaseManager();
+  public static constructors = {
+    instanceStorage: InstanceStorage,
+    mongo: Mongo,
+    fileStorage: FileStorage,
+    redis: Redis,
+  } as const;
+  public static instance = new DatabaseManager();
 
-	public database: InstanceType<typeof DatabaseManager.constructors[keyof typeof DatabaseManager.constructors]>;
-	private constructor() {
-		this.init();
-	}
+  public database: InstanceType<
+    typeof DatabaseManager.constructors[keyof typeof DatabaseManager.constructors]
+  >;
+  private constructor() {
+    this.init();
+  }
 
-	private async init(): Promise<void> {
-		const config = await getConfig();
+  private async init(): Promise<void> {
+    const config = await getConfig();
 
-		logger.log('Using database:', config.database.type);
+    logger.log('Using database:', config.database.type);
 
-		this.database = new DatabaseManager.constructors[config.database.type]();
-	}
+    this.database = new DatabaseManager.constructors[config.database.type]();
+  }
 }
 
 export default DatabaseManager.instance;
