@@ -1,7 +1,9 @@
 import ApplyCosmeticsPacket from '../../../packets/ApplyCosmeticsPacket';
+import findPlayer from '../../../utils/findPlayer';
 import Player from '../../Player';
 
 export default function (player: Player, packet: ApplyCosmeticsPacket): void {
+  //console.log('ApplyCosmeticsPacket');
   for (const cosmetic of packet.data.cosmetics) {
     player.setCosmeticState(cosmetic.id, cosmetic.equipped);
   }
@@ -21,16 +23,21 @@ export default function (player: Player, packet: ApplyCosmeticsPacket): void {
           packet.data.adjustableHeightCosmetics[cosmetic];
 
   // Sending the new state of the cosmetics to lunar
+
+  let newPacketData = packet.data;
+  newPacketData.cosmetics = [
+    ...player.cosmetics.fake,
+    ...player.cosmetics.owned,
+  ];
   const newPacket = new ApplyCosmeticsPacket();
   newPacket.write({
-    ...packet.data,
-    cosmetics: player.cosmetics.owned,
+    ...newPacketData,
+    cosmetics: player.cosmetics.fake,
     // Non premium users can't change clothCloak
-    clothCloak: player.premium.real
-      ? packet.data.clothCloak
-      : player.clothCloak.real,
+    clothCloak: true,
     adjustableHeightCosmetics: newAdjustableHeightCosmetics,
   });
+
   player.writeToServer(newPacket);
 
   player.updateDatabase();

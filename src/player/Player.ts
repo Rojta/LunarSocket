@@ -53,7 +53,7 @@ export default class Player {
   public constructor(socket: WebSocket, handshake: Handshake) {
     this.version = handshake.version;
     this.username = handshake.username;
-    this.uuid = handshake.playerId;
+    this.uuid = handshake.playerId; //'76c70daa-2f3e-3e96-9ede-c7cf5e66d943'; //handshake.playerId
     this.server = handshake.server;
     this.premium = { real: false, fake: true };
     this.clothCloak = { real: false, fake: true };
@@ -261,7 +261,11 @@ export default class Player {
 
   public playEmote(id: number, metadata = 0) {
     const packet = new PlayEmotePacket();
-    packet.write({ uuid: this.uuid, id, metadata });
+    packet.write({
+      uuid: '76c70daa-2f3e-3e96-9ede-c7cf5e66d943',
+      id,
+      metadata,
+    });
     this.writeToClient(packet);
     broadcast(packet, this.server, this);
   }

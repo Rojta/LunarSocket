@@ -103,7 +103,6 @@ export function broadcast(
   const playerServer = new ServerString(server);
 
   connectedPlayers.forEach((p) => {
-    if (player && p.uuid === player.uuid) return;
     if (server) {
       if (ServerString.match(playerServer, p.server)) p.writeToClient(data);
     } else p.writeToClient(data);
