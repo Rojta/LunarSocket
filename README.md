@@ -1,3 +1,6 @@
+# ❗Notice
+I changed the lunar socket so it works on the cracked servers but only for my Minecraft character, the code that I changed is messy, I made it in a hurry, If someone wants to make it work for every cracked account feel free to do so, I currently don't have time to do it the right way.
+
 # LunarSocket
 
 Lunar Socket is a Websocket server for Lunar Client.
